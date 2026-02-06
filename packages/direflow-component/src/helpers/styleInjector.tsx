@@ -1,10 +1,11 @@
-import React, { Component, cloneElement, isValidElement } from 'react';
+import React, { Component, cloneElement, isValidElement, CSSProperties } from 'react';
 import adler32 from 'react-lib-adler32';
 
 const isDevEnv = process.env.NODE_ENV !== 'production';
 
 interface IProps {
   scoped?: boolean;
+  children?: (React.ReactNode | CSSProperties | string) | (React.ReactNode | CSSProperties | string)[];
 }
 
 class Style extends Component<IProps> {

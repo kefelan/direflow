@@ -44,6 +44,8 @@ export = function override(config: TConfig, env: string, options?: IOptions) {
     externals: overrideExternals(config.externals, env, direflowConfig),
   };
 
+  excludeBadSourceMaps(config);
+
   return overridenConfig;
 };
 
@@ -163,12 +165,55 @@ function overridePlugins(plugins: IPlugin[], entry: TEntry, env: string, config?
 
             return [envKey, value];
           }),
-        ),
+        ) as IPlugin,
       ),
     );
   }
 
   return plugins;
+}
+
+function excludeBadSourceMaps(config: TConfig) {
+  const rx = /node_modules[\\/]@webcomponents[\\/]webcomponentsjs/;
+
+  const addExclude = (rule: any) => {
+    if (!rule) return;
+
+    // match: rule.loader = '...source-map-loader...'
+    const hasLoader =
+      typeof rule.loader === 'string' && rule.loader.includes('source-map-loader');
+
+    // match: rule.use = '...source-map-loader...' OR [{loader: ...}]
+    const useArr = Array.isArray(rule.use) ? rule.use : rule.use ? [rule.use] : [];
+    const hasUse = useArr.some((u: any) =>
+      typeof u === 'string'
+        ? u.includes('source-map-loader')
+        : typeof u?.loader === 'string' && u.loader.includes('source-map-loader'),
+    );
+
+    if (hasLoader || hasUse) {
+      if (!rule.exclude) rule.exclude = [rx];
+      else if (Array.isArray(rule.exclude)) rule.exclude.push(rx);
+      else rule.exclude = [rule.exclude, rx];
+    }
+  };
+
+  const walk = (rules: any[]) => {
+    for (const rule of rules) {
+      if (!rule) continue;
+
+      addExclude(rule);
+
+      // CRA nests rules in oneOf
+      if (Array.isArray(rule.oneOf)) walk(rule.oneOf);
+
+      // some configs nest further
+      if (Array.isArray(rule.rules)) walk(rule.rules);
+    }
+  };
+
+  const topRules = (config.module?.rules as any[]) || [];
+  walk(topRules);
 }
 
 function overrideResolve(currentResolve: IResolve) {
