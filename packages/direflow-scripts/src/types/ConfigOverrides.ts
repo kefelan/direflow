@@ -46,6 +46,7 @@ export interface IPlugin {
 }
 
 export interface IResolve {
+  alias: { [key: string]: string };
   plugins: unknown[];
 }
 

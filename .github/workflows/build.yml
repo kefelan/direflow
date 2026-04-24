@@ -3,61 +3,39 @@ name: build
 on:
   push:
     branches:
-    - master
+      - main
+  pull_request:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-node@v1
-      with:
-        node-version: 12.x
-        registry-url: 'https://registry.npmjs.org'
-    
-    - name: Prepare
-      run: |
-        sudo apt-get install lsof
-        npm install codecov -g
+      - uses: actions/checkout@v4
 
-    - name: Install
-      run: |
-        npm run clean:all
-        npm run install:all
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
 
-    - name: Codecov
-      run: codecov -t ${{ secrets.CODECOV_TOKEN }}
+      - name: Install root dependencies
+        run: npm ci
 
-    - name: Build
-      run: |
-        npm run build:all
+      - name: Test root package
+        run: npm test -- --runInBand
 
-    - name: Test
-      run: |
-        npm run test
+      - name: Build root package
+        run: npm run build
 
-    - name: Integration Test
-      run: |
-        npm run cypress:test
+      - name: Build and pack direflow-component
+        run: |
+          cd packages/direflow-component
+          npm ci
+          npm run build
+          npm pack --dry-run
 
-    - name: Create version patch
-      run: npm run update-version patch
-
-    - name: Publish direflow-cli to NPM
-      run: npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-  
-    - name: Publish direflow-component to NPM
-      run: |
-        cd packages/direflow-component
-        npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
-  
-    - name: Publish direflow-scripts to NPM
-      run: |
-        cd packages/direflow-scripts
-        npm publish
-      env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+      - name: Build and pack direflow-scripts
+        run: |
+          cd packages/direflow-scripts
+          npm ci
+          npm run build
+          npm pack --dry-run

@@ -1,6 +1,6 @@
 {
-  "name": "direflow-cli",
-  "version": "4.0.0",
+  "name": "@kefelan/direflow-cli",
+  "version": "5.0.0",
   "description": "Official CLI for Direflow",
   "main": "dist/index.js",
   "scripts": {
@@ -26,7 +26,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:Silind-Software/direflow.git"
+    "url": "https://github.com/kefelan/direflow.git"
   },
   "keywords": [
     "cli",
@@ -35,9 +35,9 @@
     "react",
     "typescript"
   ],
-  "author": "Silind Software",
+  "author": "Kefelan Solutions",
   "license": "MIT",
-  "homepage": "https://direflow.io",
+  "homepage": "https://www.kefelan.solutions/direflow",
   "dependencies": {
     "boxen": "^6.2.1",
     "chalk": "4.1.2",

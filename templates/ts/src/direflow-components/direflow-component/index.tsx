@@ -1,4 +1,4 @@
-import { DireflowComponent } from 'direflow-component';
+import { DireflowComponent } from '@kefelan/direflow-component';
 import App from './App';
 
 export default DireflowComponent.create({
