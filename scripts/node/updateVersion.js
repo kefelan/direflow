@@ -82,7 +82,7 @@ const writeToFiles = () => {
 };
 
 if (arg === 'patch') {
-  const buffer = execSync('npm view direflow-cli version');
+  const buffer = execSync('npm view @kefelan/direflow-cli version');
   const currentVersion = buffer.toString('utf8');
 
   if (

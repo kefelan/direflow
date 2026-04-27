@@ -2,9 +2,11 @@
   "name": "@kefelan/direflow-cli",
   "version": "5.0.0",
   "description": "Official CLI for Direflow",
-  "main": "dist/index.js",
+  "main": "dist/cli.js",
+  "types": "dist/cli.d.ts",
   "scripts": {
     "build": "tsc",
+    "prepack": "npm run build",
     "test": "jest",
     "update-version": "node scripts/node/updateVersion.js",
     "setup-local": "./scripts/bash/setupLocal.sh",
@@ -27,6 +29,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/kefelan/direflow.git"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "cli",
