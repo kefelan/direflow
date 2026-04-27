@@ -26,6 +26,9 @@ jobs:
       - name: Build root package
         run: npm run build
 
+      - name: Pack root CLI package
+        run: npm pack --dry-run
+
       - name: Build and pack direflow-component
         run: |
           cd packages/direflow-component
