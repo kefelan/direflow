@@ -46,7 +46,7 @@ function start() {
 }
 
 function test(args: string[]) {
-  spawner('react-app-rewired', ['test', '--env=jest-environment-jsdom-fourteen', ...args], {
+  spawner('react-app-rewired', ['test', ...args], {
     shell: true,
     stdio: 'inherit',
     env,

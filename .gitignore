@@ -288,3 +288,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.gitignore.io/api/osx,node,windows,webstorm+all,intellij+all,visualstudiocode
+
+# Kelefan Solutions
+/.archive
+/.local
+/.logs
+/.slack

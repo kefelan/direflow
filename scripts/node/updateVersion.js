@@ -16,11 +16,11 @@ const scriptPackage = require('../../packages/direflow-scripts/package.json');
 let componentPackageJs = fs.readFileSync('templates/js/package.json').toString();
 let componentPackageTs = fs.readFileSync('templates/ts/package.json').toString();
 
-const componentRegex = /"direflow-component": "(.*)"/g;
-const componentReplace = (r) => `"direflow-component": ${JSON.stringify(r)}`;
+const componentRegex = /"@kefelan\/direflow-component": "(.*)"/g;
+const componentReplace = (r) => `"@kefelan/direflow-component": ${JSON.stringify(r)}`;
 
-const scriptsRegex = /"direflow-scripts": "(.*)"/g;
-const scriptsReplace = (r) => `"direflow-scripts": ${JSON.stringify(r)}`;
+const scriptsRegex = /"@kefelan\/direflow-scripts": "(.*)"/g;
+const scriptsReplace = (r) => `"@kefelan/direflow-scripts": ${JSON.stringify(r)}`;
 
 const updateLink = () => {
   const currentDirectory = process.cwd();
@@ -82,7 +82,7 @@ const writeToFiles = () => {
 };
 
 if (arg === 'patch') {
-  const buffer = execSync('npm view direflow-cli version');
+  const buffer = execSync('npm view @kefelan/direflow-cli version');
   const currentVersion = buffer.toString('utf8');
 
   if (

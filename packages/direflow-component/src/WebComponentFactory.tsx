@@ -1,7 +1,8 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable max-classes-per-file */
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
+import { unmountComponentAtNode } from 'react-dom';
 import _ from 'lodash';
 import createProxyRoot from './helpers/proxyRoot';
 import { IDireflowPlugin } from './types/DireflowConfig';
@@ -124,7 +125,7 @@ class WebComponentFactory {
        * Web Component gets unmounted from the DOM.
        */
       public disconnectedCallback() {
-        ReactDOM.unmountComponentAtNode(this);
+        unmountComponentAtNode(this);
       }
 
       /**
@@ -239,7 +240,8 @@ class WebComponentFactory {
         const [applicationWithPlugins, shadowChildren] = this.applyPlugins(application);
 
         if (!factory.shadow) {
-          ReactDOM.render(applicationWithPlugins, this);
+          const root = ReactDOM.createRoot(this);
+          root.render(applicationWithPlugins);
           return;
         }
 
@@ -249,8 +251,9 @@ class WebComponentFactory {
           currentChildren = Array.from(this.children).map((child: Node) => child.cloneNode(true));
         }
 
-        const root = createProxyRoot(this, shadowChildren);
-        ReactDOM.render(<root.open>{applicationWithPlugins}</root.open>, this);
+        const proxyRoot = createProxyRoot(this, shadowChildren);
+        const root = ReactDOM.createRoot(this);
+        root.render(<proxyRoot.open>{applicationWithPlugins}</proxyRoot.open>);
 
         if (currentChildren) {
           currentChildren.forEach((child: Node) => this.append(child));
