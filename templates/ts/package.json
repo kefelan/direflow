@@ -3,21 +3,21 @@
   "description": "{{defaultDescription}}",
   "version": "1.0.0",
   {{#if npmModule}}
-  "author": "",
+  "author": "Kefelan Solutions",
   "license": "MIT",
   "keywords": [
     "direflow",
     "react",
     "webcomponent"
   ],
-  "homepage": "https://direflow.io/",
+  "homepage": "https://www.kefelan.solutions/direflow/",
   "repository": {
     "type": "git",
     "url": "https://github.com/Silind-Software/direflow"
   },
   "bugs": {
-    "email": "direflow@silind.com",
-    "url": "https://github.com/Silind-Software/direflow/issues/new"
+    "email": "direflow@kefelan.com",
+    "url": "https://github.com/kefelan/direflow/issues/new"
   },
   "main": "build/direflowBundle.js",
   "files": [
@@ -34,14 +34,14 @@
   },
   "dependencies": {
     "@types/node": "^16.11.7",
-    "@types/react": "17.0.2",
-    "@types/react-dom": "17.0.2",
-    "react": "17.0.2",
-    "react-dom": "17.0.2",
+    "@types/react": "18.2.0",
+    "@types/react-dom": "18.2.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "react-lib-adler32": "^1.0.3",
     "react-scripts": "^4.0.3",
-    "direflow-component": "4.0.0",
-    "direflow-scripts": "4.0.0",
+    "@kefelan/direflow-component": "5.0.1",
+    "@kefelan/direflow-scripts": "5.0.1",
     "webfontloader": "^1.6.28"
   },
   "devDependencies": {
@@ -52,11 +52,10 @@
     "eslint-plugin-promise": "^6.0.0",
     "eslint-plugin-react": "^7.30.0",
     {{/if}}
-    "@types/jest": "24.0.18",
-    "@types/react-test-renderer": "16.9.1",
-    "jest-environment-jsdom": "28.1.0",
+    "@types/jest": "28.1.0",
+    "@types/react-test-renderer": "^18.0.0",
     "react-app-rewired": "2.2.1",
-    "react-test-renderer": "17.0.2",
+    "react-test-renderer": "18.2.0",
     "to-string-loader": "^1.2.0",
     {{#if tslint}}
     "tslint-react": "^5.0.0",
@@ -83,7 +82,7 @@
   },
   "jest": {
     "setupFilesAfterEnv": [
-      "direflow-scripts/direflow-jest.config.js"
+      "@kefelan/direflow-scripts/direflow-jest.config.js"
     ]
   },
   "config-overrides-path": "direflow-webpack.js"

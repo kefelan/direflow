@@ -1,6 +1,7 @@
 {
   "name": "test-setup",
   "description": "This project is created using Direflow",
+  "author": "Kefelan Solutions",
   "version": "1.0.0",
   "private": true,
   "scripts": {

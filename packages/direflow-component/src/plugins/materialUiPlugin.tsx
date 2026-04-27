@@ -13,7 +13,7 @@ const materialUiPlugin: PluginRegistrator = (
   if (plugins?.find((plugin) => plugin.name === 'material-ui')) {
     try {
       const { create } = require('jss');
-      const { jssPreset, StylesProvider, createGenerateClassName } = require('@material-ui/core/styles');
+      const { jssPreset, StylesProvider, createGenerateClassName } = require('@mui/material/styles');
       const seed = uniqueid(`${element.tagName.toLowerCase()}-`);
       const insertionPoint = document.createElement('span');
       insertionPoint.id = 'direflow_material-ui-styles';
@@ -40,7 +40,7 @@ const materialUiPlugin: PluginRegistrator = (
         insertionPoint,
       ];
     } catch (err) {
-      console.error('Could not load Material-UI. Did you remember to install @material-ui/core?');
+      console.error('Could not load Material-UI. Did you remember to install @mui/material?');
     }
   }
 };
