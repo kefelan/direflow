@@ -1,0 +1,306 @@
+name: publish
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
+      should_publish: ${{ steps.release_check.outputs.should_publish }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Determine release version
+        id: release
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify coordinated package versions
+        run: |
+          node <<'EOF'
+          const rootVersion = require('./package.json').version;
+          const packageVersions = {
+            'package.json': rootVersion,
+            'packages/direflow-component/package.json': require('./packages/direflow-component/package.json').version,
+            'packages/direflow-scripts/package.json': require('./packages/direflow-scripts/package.json').version,
+          };
+
+          const mismatches = Object.entries(packageVersions).filter(([, version]) => version !== rootVersion);
+
+          if (mismatches.length > 0) {
+            console.error(`Expected all publishable packages to use version ${rootVersion}.`);
+            for (const [file, version] of mismatches) {
+              console.error(`${file} has version ${version}.`);
+            }
+            process.exit(1);
+          }
+          EOF
+
+      - name: Check whether this version already has a GitHub Release
+        id: release_check
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ steps.release.outputs.tag }}
+        with:
+          script: |
+            const tag = process.env.RELEASE_TAG;
+
+            try {
+              await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag,
+              });
+
+              core.setOutput('should_publish', 'false');
+              await core.summary
+                .addRaw(`Version ${tag} already has a GitHub Release. Skipping automated publish.\n`)
+                .write();
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+
+              core.setOutput('should_publish', 'true');
+              await core.summary
+                .addRaw(`Preparing automated publish for ${tag}.\n`)
+                .write();
+            }
+
+  validate:
+    needs: prepare
+    if: needs.prepare.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            packages/direflow-component/package-lock.json
+            packages/direflow-scripts/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Test root package
+        run: npm test -- --runInBand
+
+      - name: Build root package
+        run: npm run build
+
+      - name: Pack root CLI package
+        run: npm pack --dry-run
+
+      - name: Build and pack direflow-component
+        run: |
+          cd packages/direflow-component
+          npm ci
+          npm run build
+          npm pack --dry-run
+
+      - name: Build and pack direflow-scripts
+        run: |
+          cd packages/direflow-scripts
+          npm ci
+          npm run build
+          npm pack --dry-run
+
+  publish-component:
+    needs:
+      - prepare
+      - validate
+    if: needs.prepare.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js for npm publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: packages/direflow-component/package-lock.json
+
+      - name: Check whether direflow-component is already published
+        id: component_registry_check
+        env:
+          PACKAGE_NAME: '@kefelan/direflow-component'
+          PACKAGE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "${PACKAGE_NAME}@${PACKAGE_VERSION} already exists on npm. Skipping publish." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install component dependencies
+        if: steps.component_registry_check.outputs.should_publish == 'true'
+        working-directory: packages/direflow-component
+        run: npm ci
+
+      - name: Publish direflow-component
+        if: steps.component_registry_check.outputs.should_publish == 'true'
+        working-directory: packages/direflow-component
+        run: npm publish --provenance --access public
+
+  publish-scripts:
+    needs:
+      - prepare
+      - publish-component
+    if: needs.prepare.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js for npm publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: packages/direflow-scripts/package-lock.json
+
+      - name: Check whether direflow-scripts is already published
+        id: scripts_registry_check
+        env:
+          PACKAGE_NAME: '@kefelan/direflow-scripts'
+          PACKAGE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "${PACKAGE_NAME}@${PACKAGE_VERSION} already exists on npm. Skipping publish." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install scripts package dependencies
+        if: steps.scripts_registry_check.outputs.should_publish == 'true'
+        working-directory: packages/direflow-scripts
+        run: npm ci
+
+      - name: Publish direflow-scripts
+        if: steps.scripts_registry_check.outputs.should_publish == 'true'
+        working-directory: packages/direflow-scripts
+        run: npm publish --provenance --access public
+
+  publish-cli:
+    needs:
+      - prepare
+      - publish-scripts
+    if: needs.prepare.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js for npm publishing
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Check whether direflow-cli is already published
+        id: cli_registry_check
+        env:
+          PACKAGE_NAME: '@kefelan/direflow-cli'
+          PACKAGE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "${PACKAGE_NAME}@${PACKAGE_VERSION} already exists on npm. Skipping publish." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install CLI dependencies
+        if: steps.cli_registry_check.outputs.should_publish == 'true'
+        run: npm ci
+
+      - name: Publish direflow-cli
+        if: steps.cli_registry_check.outputs.should_publish == 'true'
+        run: npm publish --provenance --access public
+
+  create-release:
+    needs:
+      - prepare
+      - publish-cli
+    if: needs.prepare.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create GitHub Release
+        uses: actions/github-script@v7
+        env:
+          RELEASE_TAG: ${{ needs.prepare.outputs.tag }}
+        with:
+          script: |
+            const tag = process.env.RELEASE_TAG;
+
+            try {
+              await github.rest.repos.getReleaseByTag({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag,
+              });
+
+              core.info(`GitHub Release ${tag} already exists. Skipping creation.`);
+            } catch (error) {
+              if (error.status !== 404) {
+                throw error;
+              }
+
+              await github.rest.repos.createRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                tag_name: tag,
+                target_commitish: context.sha,
+                name: tag,
+                generate_release_notes: true,
+              });
+            }

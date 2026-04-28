@@ -1,0 +1,43 @@
+name: integration
+
+on:
+  # This workflow is intentionally manual for now.
+  # The legacy integration path is preserved for future modernization, but it is
+  # not stable enough to act as a required PR gate alongside build.yml.
+  workflow_dispatch:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Prepare system dependencies
+        run: sudo apt-get update && sudo apt-get install -y lsof
+
+      - name: Install integration dependencies
+        run: |
+          npm run clean:all
+          npm run install:all
+
+      - name: Build integration fixtures
+        run: |
+          npm run build:all
+
+      - name: Run legacy Cypress integration suite
+        run: npm run cypress:test
+
+      # Public note for maintainers:
+      # This workflow is kept as an optional/manual path because the legacy
+      # integration setup still needs modernization. Recent failures showed both
+      # outdated workflow-era assumptions and Cypress fixture/test compatibility
+      # issues with the current dependency baseline.

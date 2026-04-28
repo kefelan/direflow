@@ -36,8 +36,8 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "react-scripts": "^4.0.3",
-    "@kefelan/direflow-component": "5.0.1",
-    "@kefelan/direflow-scripts": "5.0.1"
+    "@kefelan/direflow-component": "5.0.2",
+    "@kefelan/direflow-scripts": "5.0.2"
   },
   "devDependencies": {
     "eslint-plugin-node": "^11.1.0",
