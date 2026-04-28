@@ -1,6 +1,6 @@
 {
   "name": "@kefelan/direflow-cli",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "Official CLI for Direflow",
   "main": "dist/cli.js",
   "types": "dist/cli.d.ts",

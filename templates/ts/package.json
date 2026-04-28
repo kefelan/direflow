@@ -40,8 +40,8 @@
     "react-dom": "18.2.0",
     "react-lib-adler32": "^1.0.3",
     "react-scripts": "^4.0.3",
-    "@kefelan/direflow-component": "5.0.1",
-    "@kefelan/direflow-scripts": "5.0.1",
+    "@kefelan/direflow-component": "5.0.2",
+    "@kefelan/direflow-scripts": "5.0.2",
     "webfontloader": "^1.6.28"
   },
   "devDependencies": {
