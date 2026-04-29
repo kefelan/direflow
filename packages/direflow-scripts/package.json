@@ -1,6 +1,6 @@
 {
   "name": "@kefelan/direflow-scripts",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "Create Web Components using React",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -35,7 +35,6 @@
     "babel-loader": "^8.4.1",
     "chalk": "^4.1.2",
     "css-loader": "^6.11.0",
-    "esm": "^3.2.25",
     "event-hooks-webpack-plugin": "^2.2.0",
     "handlebars": "^4.7.7",
     "rimraf": "^3.0.2",
